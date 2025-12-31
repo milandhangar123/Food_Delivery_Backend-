@@ -1,18 +1,34 @@
 const mongoose = require('mongoose');
 
-var mongoURL = "mongodb+srv://ms8755301254:Milan786@cluster0.y7o2r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" ;
+const connectDB = async () => {
+  // Get MongoDB connection string from environment variables
+  // NEVER hardcode credentials in production!
+  const mongoURL = process.env.MONGO_URI || process.env.MONGO_URL;
 
- const connectDB = async () => {
-    try {
-      await mongoose.connect(mongoURL).then(()=> console.log("database connected"));
-  
-    } catch (error) {
-      console.error('Error connecting to MongoDB:', error);
-      process.exit(1); // Exit the process with failure
+  if (!mongoURL) {
+    console.error('ERROR: MONGO_URI or MONGO_URL environment variable is not set!');
+    console.error('Please set MONGO_URI in your .env file or environment variables.');
+    process.exit(1);
+  }
+
+  try {
+    await mongoose.connect(mongoURL, {
+      // Recommended connection options
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+    });
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error('❌ Error connecting to MongoDB:', error.message);
+    // Don't exit in production - let the process manager handle it
+    if (process.env.NODE_ENV === 'development') {
+      process.exit(1);
     }
-  };
+    throw error;
+  }
+};
 
-  module.exports = connectDB;
+module.exports = connectDB;
 
 
 
